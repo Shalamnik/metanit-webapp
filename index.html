@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>User list</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <style>
+      a {
+        cursor: pointer;
+      }
+
+      a:hover {
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>User list</h2>
+    
+    <form id="form" name="userForm">
+      <input type="hidden" name="id" value="0">
+      <div class="form-group">
+        <label for="name">Name:</label>
+        <input class="form-control" name="name">
+      </div>
+      <div class="form-group">
+        <label for="age">Age:</label>
+        <input class="form-control" name="age">
+      </div>
+      <div class="panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+        <a id="reset" class="btn btn-sm btn-primary">Reset</a>
+      </div>
+    </form>
+
+    <table class="table table-condensed table-stripted table-bordered">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Age</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      </tbody>
+    </table>
+
+    <script>
+       async function getUsers() {
+        
+        let response = await fetch("/api/users", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          }
+        });
+        
+        let users = await response.json();
+        let rows = "";
+        
+        for (let user of users) {
+          rows += row(user);
+        }
+
+        tbody = document.querySelector("tbody");
+        tbody.insertAdjacentHTML("afterbegin", rows);
+      }
+
+      async function getUser(id) {
+        
+        let response = await fetch("/api/users/" + id, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          }
+        });
+        
+        let user = await response.json();
+        
+        let form = document.forms["userForm"];
+        form.elements["id"].value = user.id;
+        form.elements["name"].value = user.name;
+        form.elements["age"].value = user.age;
+
+      }
+
+      async function createUser(userName, userAge) {
+        
+        let response = await fetch("/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          },
+          body: JSON.stringify({
+            name: userName,
+            age: userAge
+          })
+        });
+
+        let user = await response.json();
+        user.name = userName;
+        user.age = userAge;
+        
+        reset();
+
+        let tbody = document.querySelector("tbody");
+        tbody.insertAdjacentHTML("beforeend", row(user));
+
+      }
+
+      async function editUser(userId, userName, userAge) {
+
+        let response = await fetch("/api/users", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json; charset=utf-8"
+          },
+          body: JSON.stringify({
+            id: userId,
+            name: userName,
+            age: userAge
+          })
+        });
+
+        let user = response.json();
+        user.id = userId;
+        user.name = userName;
+        user.age = userAge;
+
+        reset();
+
+        let tr = document.querySelector(`tr[data-rowid="${user.id}"]`);
+        tr.insertAdjacentHTML("beforebegin", row(user));
+        tr.remove();
+      }
+
+      async function deleteUser(id) {
+
+        let response = await fetch("/api/users/" + id, {
+          method: "DELETE",
+          header: {
+            "Content-Type": "application/json; charset=utf-8"
+          }
+        });
+
+        let user = await response.json();
+        console.log(user);
+
+        let tr = document.querySelector(`tr[data-rowid="${user.id}"]`);
+        tr.remove();
+      }
+
+
+      function reset() {
+        
+        let form = document.forms["userForm"];
+        form.reset();
+        form.elements["id"].value = 0;
+      }
+
+      function row(user) {
+
+        return `<tr data-rowid="${user.id}">
+                  <td>${user.id}</td>
+                  <td>${user.name}</td>
+                  <td>${user.age}</td>
+                  <td>
+                    <a class="editLink" data-id="${user.id}">Change</a> |
+                    <a class="removeLink" data-id="${user.id}">Remove</a>
+                  </td>
+                </tr>`
+      }
+
+      let resetBtn = document.getElementById("reset");
+
+      resetBtn.addEventListener("click", function(event) {
+        
+        event.preventDefault();
+        reset();
+      });
+
+      let form = document.querySelector("form");
+
+      form.addEventListener("submit", function(event) {
+
+        event.preventDefault();
+        let id = this.elements["id"].value;
+        let name = this.elements["name"].value;
+        let age = this.elements["age"].value;
+
+        if (id == 0) {
+          createUser(name, age);
+        } else {
+          editUser(id, name, age);
+        }
+      });
+
+      document.body.addEventListener("click", function(event) {
+        
+        if (event.target.className != "editLink") return;
+
+        let id = event.target.dataset.id;
+
+        getUser(id);
+      });
+
+      document.body.addEventListener("click", function(event) {
+
+        if (event.target.className != "removeLink") return;
+
+        let id = event.target.dataset.id;
+
+        deleteUser(id);
+      });
+
+      getUsers();
+      
+    </script>
+  </body>
+</html>
