@@ -124,7 +124,7 @@
           })
         });
 
-        let user = response.json();
+        let user = await response.json();
         user.id = userId;
         user.name = userName;
         user.age = userAge;
