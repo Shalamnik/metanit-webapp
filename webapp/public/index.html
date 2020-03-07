@@ -125,9 +125,6 @@
         });
 
         let user = await response.json();
-        user.id = userId;
-        user.name = userName;
-        user.age = userAge;
 
         reset();
 
@@ -149,15 +146,6 @@
 
         let tr = document.querySelector(`tr[data-rowid="${user.id}"]`);
         tr.remove();
-        
-        // Update the page with the modified list of Users
-        // or you can remove it and press "f5" to reload the page
-        let trs = document.querySelectorAll("tr");
-        for (let tr of trs) {
-          tr.remove();
-        }
-
-        getUsers();
       }
 
 
