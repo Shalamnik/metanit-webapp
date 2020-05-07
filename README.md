@@ -1,2 +1,1 @@
-# Metanit_webapp
-Study project from metanit.com
+Replaced **jquery** to **vanilla JS**: *fetch, DOM and etc.*
